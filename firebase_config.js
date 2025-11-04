@@ -19,3 +19,22 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+export const app  = initializeApp(firebaseConfig);
+export const db   = getFirestore(app);
+export const auth = getAuth(app);
+export const provider = new GoogleAuthProvider();
+
+// أداة: جلب المستخدم والمطالبات (claims)
+export async function getUserWithClaims() {
+  const user = auth.currentUser;
+  if (!user) return { user: null, claims: {} };
+  const t = await getIdTokenResult(user, /*forceRefresh*/ true);
+  return { user, claims: t.claims || {} };
+}
+
+// نُصدّر كل ما قد نحتاجه في app.js (لراحة الاستيراد الموحد)
+export {
+  collection, getDocs, getDoc, doc, setDoc, addDoc, updateDoc, deleteDoc,
+  query, where, orderBy, writeBatch, serverTimestamp,
+  signInWithPopup, signOut, onAuthStateChanged, getIdTokenResult
+};
