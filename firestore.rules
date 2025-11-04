@@ -1,0 +1,17 @@
+// firestore.rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // قراءة عامة لكل المجموعات (الموقع يعرض بيانات عامة)
+    match /{document=**} {
+      allow read: if true;
+
+      // كتابة وتعديل وحذف — فقط للمشرفين
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
