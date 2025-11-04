@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>بيانات أعضاء هيئة التدريس</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="container header">
+    <h1>بيانات أعضاء هيئة التدريس</h1>
+    <div class="actions">
+      <button id="printBtn">طباعة التقرير</button>
+      <button id="exportBtn">تصدير JSON</button>
+      <label class="file-btn">
+        استيراد JSON
+        <input id="importFile" type="file" accept="application/json" />
+      </label>
+      <span class="userbox">
+        <span id="userInfo">غير مسجّل</span>
+        <button id="loginBtn">تسجيل الدخول</button>
+        <button id="logoutBtn" class="danger" style="display:none">تسجيل الخروج</button>
+      </span>
+    </div>
+  </header>
+
+  <section class="container filters">
+    <div>
+      <label>الفصل:</label>
+      <select id="termSelect"></select>
+    </div>
+    <div>
+      <label>القسم:</label>
+      <select id="deptSelect"><option value="">الكل</option></select>
+    </div>
+    <div>
+      <label>الفرع:</label>
+      <select id="branchSelect"><option value="">الكل</option></select>
+    </div>
+    <div>
+      <label>الجنسية:</label>
+      <select id="natSelect">
+        <option value="">الكل</option>
+        <option value="سعودي">سعودي</option>
+        <option value="غير سعودي">غير سعودي</option>
+      </select>
+    </div>
+    <div>
+      <label>الرتبة وقت الفصل:</label>
+      <select id="rankSelect">
+        <option value="">الكل</option>
+        <option>أستاذ</option>
+        <option>أستاذ مشارك</option>
+        <option>أستاذ مساعد</option>
+        <option>محاضر</option>
+      </select>
+    </div>
+    <div class="grow">
+      <label>بحث بالاسم:</label>
+      <input id="searchInput" type="search" placeholder="مثال: أحمد" />
+    </div>
+  </section>
+
+  <section class="container dashboard" id="dashboard">
+    <h2>لوحة آخر التحديثات</h2>
+    <ul id="updatesList" class="updates"></ul>
+  </section>
+
+  <main class="container">
+    <nav class="tabs">
+      <button class="tab active" data-tab="summary">ملخص إحصائي</button>
+      <button class="tab" data-tab="members">جدول الأعضاء</button>
+      <button class="tab" data-tab="activities">الأنشطة</button>
+      <button class="tab" data-tab="publications">المنشورات</button>
+      <button class="tab" data-tab="courses">المقررات</button>
+      <button class="tab adminOnly" data-tab="admin" style="display:none">الإدارة (إدخال البيانات)</button>
+    </nav>
+
+    <section id="summary" class="tabpane active">
+      <div class="cards" id="summaryCards"></div>
+    </section>
+
+    <section id="members" class="tabpane">
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>القسم</th>
+              <th>الفرع</th>
+              <th>الجنسية</th>
+              <th>الرتبة (في الفصل المختار)</th>
+            </tr>
+          </thead>
+          <tbody id="membersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="activities" class="tabpane">
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>العضو</th><th>النشاط</th><th>النوع</th><th>التاريخ</th><th>الفصل</th>
+            </tr>
+          </thead>
+          <tbody id="activitiesBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="publications" class="tabpane">
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>العضو</th><th>العنوان</th><th>النوع</th><th>السنة</th>
+            </tr>
+          </thead>
+          <tbody id="pubsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="courses" class="tabpane">
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>العضو</th><th>المقرر</th><th>الرمز</th><th>الفصل</th>
+            </tr>
+          </thead>
+          <tbody id="coursesBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- تبويب الإدارة (CRUD) -->
+    <section id="admin" class="tabpane">
+      <div class="admin-note">
+        يحتاج التحرير إلى حساب بصلاحية **admin**. إن لم تكن تملكها فستُمنع العمليات.
+      </div>
+
+      <div class="grid-2">
+        <form id="formTerm" class="panel">
+          <h3>إضافة فصل</h3>
+          <label>معرّف الفصل (مثال: 1446-1)</label>
+          <input name="id" required />
+          <label>الاسم</label>
+          <input name="name" placeholder="الفصل الأول 1446/1447" required />
+          <label>بداية</label>
+          <input name="start" type="date" required />
+          <label>نهاية</label>
+          <input name="end" type="date" required />
+          <label>الترتيب الزمني (عدد صحيح)</label>
+          <input name="order" type="number" value="1" required />
+          <button type="submit">حفظ الفصل</button>
+        </form>
+
+        <form id="formDept" class="panel">
+          <h3>إضافة قسم</h3>
+          <label>معرّف القسم (مثال: CS)</label>
+          <input name="id" required />
+          <label>الاسم</label>
+          <input name="name" required />
+          <label>الفرع</label>
+          <input name="branch" />
+          <button type="submit">حفظ القسم</button>
+        </form>
+      </div>
+
+      <div class="grid-2">
+        <form id="formMember" class="panel">
+          <h3>إضافة عضو</h3>
+          <label>الاسم</label>
+          <input name="name" required />
+          <label>الجنسية</label>
+          <select name="nationality">
+            <option>سعودي</option>
+            <option>غير سعودي</option>
+          </select>
+          <button type="submit">حفظ العضو</button>
+        </form>
+
+        <form id="formAppt" class="panel">
+          <h3>تعيين (عضو محدد)</h3>
+          <label>العضو</label>
+          <select name="memberId" id="memberSelectAppt"></select>
+          <label>بدء من فصل</label>
+          <select name="termStart" id="termStartSel"></select>
+          <label>ينتهي (اختياري)</label>
+          <select name="termEnd" id="termEndSel">
+            <option value="">—</option>
+          </select>
+          <label>الرتبة</label>
+          <select name="rank">
+            <option>أستاذ</option>
+            <option>أستاذ مشارك</option>
+            <option>أستاذ مساعد</option>
+            <option>محاضر</option>
+          </select>
+          <label>القسم</label>
+          <select name="departmentId" id="deptSelAppt"></select>
+          <label>الفرع</label>
+          <input name="branch" />
+          <button type="submit">حفظ التعيين</button>
+        </form>
+      </div>
+
+      <div class="grid-3">
+        <form id="formAct" class="panel">
+          <h3>نشاط</h3>
+          <label>العضو</label>
+          <select name="memberId" id="memberSelectAct"></select>
+          <label>العنوان</label>
+          <input name="title" required />
+          <label>النوع</label>
+          <input name="type" placeholder="لجنة / ورشة / ندوة ..." />
+          <label>التاريخ</label>
+          <input name="date" type="date" />
+          <label>فصل</label>
+          <select name="termId" id="termSelAct">
+            <option value="">—</option>
+          </select>
+          <button type="submit">حفظ النشاط</button>
+        </form>
+
+        <form id="formPub" class="panel">
+          <h3>منشور</h3>
+          <label>العضو</label>
+          <select name="memberId" id="memberSelectPub"></select>
+          <label>العنوان</label>
+          <input name="title" required />
+          <label>النوع</label>
+          <input name="type" placeholder="مجلة / مؤتمر ..." />
+          <label>السنة</label>
+          <input name="year" type="number" />
+          <button type="submit">حفظ المنشور</button>
+        </form>
+
+        <form id="formCourse" class="panel">
+          <h3>مقرر</h3>
+          <label>العضو</label>
+          <select name="memberId" id="memberSelectCourse"></select>
+          <label>الرمز</label>
+          <input name="code" />
+          <label>الاسم</label>
+          <input name="name" />
+          <label>الفصل</label>
+          <select name="termId" id="termSelCourse"></select>
+          <button type="submit">حفظ المقرر</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container footer">
+    <small>نسخة بواجهة إدخال + فايربيس (Firestore + Auth).</small>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
